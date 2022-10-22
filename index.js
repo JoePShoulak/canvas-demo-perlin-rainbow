@@ -6,14 +6,10 @@ import { noise } from "./lib/Perlin.js";
 const canvas = document.getElementById("my-canvas");
 const c = canvas.getContext("2d");
 
-const bgAlpha = 0.014;
+const bgAlpha = 0.015;
+const speed = 0.001;
 
 let particles;
-
-const center = {
-  x: innerWidth / 2,
-  y: innerHeight / 2,
-};
 
 const setup = () => {
   resizeCanvas(canvas);
@@ -29,7 +25,10 @@ const setup = () => {
   }
 };
 
-// noise(1)
+const getCenter = () => {
+  return particles[Math.floor(particles.length / 2)];
+};
+
 let increment = 0;
 
 const animate = () => {
@@ -38,27 +37,36 @@ const animate = () => {
   c.fillStyle = `rgba(0, 0, 0, ${bgAlpha})`;
   c.fillRect(0, 0, innerWidth, innerHeight);
 
-  center.x += noise(increment + 5 * Math.PI) - 0.5;
-  center.y += noise(increment + 10 * Math.PI) - 0.5;
+  increment += speed;
 
-  // TODO: Keep this damn thing in the window
-  center.x = Math.min(center.x, innerWidth - 100);
-  center.x = Math.max(center.x, 100);
-  center.y = Math.min(center.y, innerHeight - 100);
-  center.y = Math.max(center.y, 100);
+  const centerParticle = getCenter();
+  const dx = (noise(increment + 200) - 0.5) * 2;
+  const dy = (noise(increment + 200) - 0.5) * 2;
 
-  increment += 0.001;
+  const centerWoudBeOffscreen =
+    centerParticle.x + dx > innerWidth - 20 ||
+    centerParticle.y + dy > innerHeight - 20 ||
+    centerParticle.x - dx < 20 ||
+    centerParticle.y - dy < 20;
 
+  // console.log(dx, dy);
   particles.forEach((particle) => {
     const newPoint = rotate(
-      center.x,
-      center.y,
+      centerParticle.x,
+      centerParticle.y,
       particle.x,
       particle.y,
       noise(increment) - 0.5
     );
-
     [particle.x, particle.y] = newPoint;
+
+    if (!centerWoudBeOffscreen) {
+      particle.x += dx;
+      particle.y += dy;
+    } else {
+      particle.x += particle.x > innerWidth / 2 ? -1 : 1;
+      particle.y += particle.y > innerHeight / 2 ? -1 : 1;
+    }
 
     particle.update();
   });
