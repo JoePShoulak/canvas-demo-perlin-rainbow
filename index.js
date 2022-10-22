@@ -49,7 +49,6 @@ const animate = () => {
     centerParticle.x - dx < 20 ||
     centerParticle.y - dy < 20;
 
-  // console.log(dx, dy);
   particles.forEach((particle) => {
     const newPoint = rotate(
       centerParticle.x,
